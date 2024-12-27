@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>表情识别</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+            background: #f0f0f0;
+        }
+        .emoji {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 48px;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        button.stop {
+            background: #dc2626;
+        }
+        button.stop:hover {
+            background: #b91c1c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+            <div id="emoji" class="emoji">😊</div>
+        </div>
+        <div class="controls">
+            <button id="startBtn" onclick="startCamera()">开启相机</button>
+            <button id="stopBtn" class="stop" onclick="stopCamera()" style="display: none;">停止</button>
+        </div>
+    </div>
+
+    <script>
+        let video = document.getElementById('video');
+        let stream = null;
+        let isRunning = false;
+
+        const emotions = {
+            happy: '😊',
+            sad: '😢',
+            angry: '😠',
+            surprised: '😮',
+            neutral: '😐'
+        };
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user' }
+                });
+                video.srcObject = stream;
+                document.getElementById('startBtn').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'inline-block';
+                isRunning = true;
+                detectEmotions();
+            } catch (err) {
+                console.error('Error:', err);
+                alert('无法访问相机，请确保已授权。');
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                document.getElementById('startBtn').style.display = 'inline-block';
+                document.getElementById('stopBtn').style.display = 'none';
+                isRunning = false;
+            }
+        }
+
+        function detectEmotions() {
+            if (!isRunning) return;
+            const emotionList = Object.values(emotions);
+            const randomEmoji = emotionList[Math.floor(Math.random() * emotionList.length)];
+            document.getElementById('emoji').textContent = randomEmoji;
+            setTimeout(detectEmotions, 500);
+        }
+
+        window.onbeforeunload = stopCamera;
+    </script>
+</body>
+</html>
